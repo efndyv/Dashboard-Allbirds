@@ -1,3 +1,5 @@
+
+
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../route/AuthContext";
@@ -5,16 +7,22 @@ import { AuthContext } from "../route/AuthContext";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!email.trim() || !password.trim()) {
+      setError("Zəhmət olmasa email ve şifrə xanalarını doldurun!");
+      return;
+    }
+
     if (login(email, password)) {
       navigate("/dashboard");
     } else {
-      alert("Geçersiz email veya şifre!");
+      setError("Yanlış email vəya şifrə!");
     }
   };
 
@@ -74,8 +82,27 @@ const Login = () => {
             zIndex: 1,
           }}
         >
-          Giriş Yap
+          Dashboard
         </h1>
+
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#ffeded",
+              color: "#e74c3c",
+              padding: "0.8rem",
+              borderRadius: "8px",
+              marginBottom: "1rem",
+              fontSize: "0.95rem",
+              fontWeight: "500",
+              textAlign: "center",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -92,7 +119,10 @@ const Login = () => {
               type="email"
               placeholder="Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
               style={{
                 width: "86%",
                 padding: "1rem",
@@ -139,9 +169,12 @@ const Login = () => {
           <div style={{ position: "relative" }}>
             <input
               type="password"
-              placeholder="Şifre"
+              placeholder="Şifrə"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
               style={{
                 width: "86%",
                 padding: "1rem",
@@ -212,7 +245,7 @@ const Login = () => {
               e.target.style.boxShadow = "0 4px 6px rgba(52, 152, 219, 0.3)";
             }}
           >
-            Giriş Yap
+           Login
           </button>
         </form>
 
@@ -226,7 +259,7 @@ const Login = () => {
             zIndex: 1,
           }}
         >
-          Hesabınız yok mu?{" "}
+          Hesabınız yoxdursa?{" "}
           <a
             href="/register"
             style={{
@@ -235,7 +268,7 @@ const Login = () => {
               fontWeight: "600",
             }}
           >
-            Kayıt Olun
+            Qeydiyyatdan keçin
           </a>
         </div>
       </div>

@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useRef } from "react";
+
+import React, { useEffect, useState, useRef, useContext } from "react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../route/AuthContext";
 
 const Dashboard = () => {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -25,6 +31,7 @@ const Dashboard = () => {
   });
 
   const img = watch("img");
+
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await axios.get("http://localhost:5000/api/products");
@@ -57,9 +64,7 @@ const Dashboard = () => {
         await axios.put(
           `http://localhost:5000/api/products/${editingProduct.id}`,
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
         const updatedProducts = products.map((p) =>
           p.id === editingProduct.id
@@ -78,9 +83,7 @@ const Dashboard = () => {
         const res = await axios.post(
           "http://localhost:5000/api/products",
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
         setProducts([...products, res.data]);
       }
@@ -129,6 +132,11 @@ const Dashboard = () => {
     setProductToDelete(null);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div
       style={{
@@ -139,9 +147,18 @@ const Dashboard = () => {
     >
       <h2 style={{ fontSize: "28px", marginBottom: "20px" }}>Admin Panel</h2>
 
-      <button onClick={() => setShowForm((prev) => !prev)} style={toggleButton}>
-        {showForm ? "Kapat" : "Yeni Ürün Ekle"}
-      </button>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        <button
+          onClick={() => setShowForm((prev) => !prev)}
+          style={toggleButton}
+        >
+          {showForm ? "Kapat" : "Yeni Ürün Ekle"}
+        </button>
+
+        <button onClick={handleLogout} style={logoutButtonStyle}>
+          Log out
+        </button>
+      </div>
 
       <AnimatePresence>
         {showForm && (
@@ -153,7 +170,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: -30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -30, scale: 0.9 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
           >
             <input
               placeholder="Başlık"
@@ -170,6 +187,7 @@ const Dashboard = () => {
               type="file"
               {...register("img", { required: !editingProduct })}
             />
+
             {preview && (
               <img src={preview} alt="preview" style={previewStyle} />
             )}
@@ -198,6 +216,7 @@ const Dashboard = () => {
             <button type="submit" disabled={isSubmitting} style={buttonStyle}>
               {editingProduct ? "Güncelle" : "Ekle"}
             </button>
+
             {editingProduct && (
               <button
                 type="button"
@@ -223,6 +242,7 @@ const Dashboard = () => {
             <h3 style={{ margin: "10px 0" }}>{product.title}</h3>
             <p>${product.price}</p>
             <p>{product.link === "/men" ? "Erkek" : "Kadın"}</p>
+
             <div style={cardButtonGroup}>
               <button
                 onClick={() => handleEdit(product)}
@@ -241,7 +261,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Silme Onay Modalı */}
       <AnimatePresence>
         {productToDelete && (
           <motion.div
@@ -261,6 +280,7 @@ const Dashboard = () => {
                 Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri
                 alınamaz.
               </p>
+
               <div style={modalButtonGroupStyle}>
                 <button onClick={confirmDelete} style={deleteButtonStyle}>
                   Sil
@@ -277,52 +297,39 @@ const Dashboard = () => {
   );
 };
 
-// Stil tanımları
-const modalOverlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0,0,0,0.5)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 1000,
+// Stiller
+const toggleButton = {
+  background: "#673ab7",
+  color: "white",
+  padding: "10px 20px",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "16px",
+  fontWeight: "bold",
 };
 
-const modalContentStyle = {
-  backgroundColor: "white",
-  padding: "30px",
-  borderRadius: "10px",
-  maxWidth: "400px",
-  width: "100%",
-  boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+const logoutButtonStyle = {
+  background: "#f44336",
+  color: "white",
+  padding: "10px 20px",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "16px",
+  fontWeight: "bold",
 };
 
-const modalButtonGroupStyle = {
-  display: "flex",
-  justifyContent: "flex-end",
+const formStyle = {
+  display: "grid",
   gap: "10px",
-  marginTop: "20px",
-};
-
-const radioGroupStyle = {
-  display: "flex",
-  gap: "20px",
-  margin: "10px 0",
-};
-
-const radioLabelStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "5px",
-  cursor: "pointer",
-};
-
-const radioInputStyle = {
-  margin: 0,
-  cursor: "pointer",
+  maxWidth: "400px",
+  marginBottom: "40px",
+  padding: "20px",
+  border: "1px solid #ccc",
+  borderRadius: "12px",
+  background: "linear-gradient(to right, #fdfbfb, #ebedee)",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
 };
 
 const inputStyle = {
@@ -352,39 +359,6 @@ const cancelButtonStyle = {
   marginLeft: "10px",
 };
 
-const toggleButton = {
-  background: "#673ab7",
-  color: "white",
-  padding: "10px 20px",
-  border: "none",
-  borderRadius: "8px",
-  marginBottom: "20px",
-  cursor: "pointer",
-  fontSize: "16px",
-  fontWeight: "bold",
-  transition: "background 0.3s",
-};
-
-const editButtonStyle = {
-  background: "#2196f3",
-  color: "white",
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontSize: "13px",
-};
-
-const deleteButtonStyle = {
-  background: "#f44336",
-  color: "white",
-  padding: "6px 10px",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontSize: "13px",
-};
-
 const cardStyle = {
   padding: "15px",
   border: "1px solid #eee",
@@ -407,23 +381,31 @@ const cardButtonGroup = {
   marginTop: "10px",
 };
 
-const gridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-  gap: "20px",
-  marginTop: "30px",
+const editButtonStyle = {
+  background: "#2196f3",
+  color: "white",
+  padding: "6px 10px",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "13px",
 };
 
-const formStyle = {
+const deleteButtonStyle = {
+  background: "#f44336",
+  color: "white",
+  padding: "6px 10px",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "13px",
+};
+
+const gridStyle = {
   display: "grid",
-  gap: "10px",
-  maxWidth: "400px",
-  marginBottom: "40px",
-  padding: "20px",
-  border: "1px solid #ccc",
-  borderRadius: "12px",
-  background: "linear-gradient(to right, #fdfbfb, #ebedee)",
-  boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+  gap: "20px",
+  marginTop: "30px",
 };
 
 const previewStyle = {
@@ -433,6 +415,53 @@ const previewStyle = {
   marginTop: "10px",
   borderRadius: "8px",
   border: "1px solid #eee",
+};
+
+const radioGroupStyle = {
+  display: "flex",
+  gap: "20px",
+  margin: "10px 0",
+};
+
+const radioLabelStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "5px",
+  cursor: "pointer",
+};
+
+const radioInputStyle = {
+  margin: 0,
+  cursor: "pointer",
+};
+
+const modalOverlayStyle = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+};
+
+const modalContentStyle = {
+  backgroundColor: "white",
+  padding: "30px",
+  borderRadius: "10px",
+  maxWidth: "400px",
+  width: "100%",
+  boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+};
+
+const modalButtonGroupStyle = {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "10px",
+  marginTop: "20px",
 };
 
 export default Dashboard;

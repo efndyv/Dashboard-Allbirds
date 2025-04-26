@@ -10,16 +10,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
-// PrivateRoute bileşeni: Sadece giriş yapmış kullanıcılar erişebilir
 const PrivateRoute = ({ children }) => {
-  const { user } = React.useContext(AuthContext);
-  return user ? children : <Navigate to="/login" />;
+  const { token } = React.useContext(AuthContext);
+  return token ? children : <Navigate to="/login" />;
 };
 
-// PublicRoute bileşeni: Sadece giriş yapmamış kullanıcılar erişebilir
 const PublicRoute = ({ children }) => {
-  const { user } = React.useContext(AuthContext);
-  return !user ? children : <Navigate to="/dashboard" />;
+  const { token } = React.useContext(AuthContext);
+  return !token ? children : <Navigate to="/dashboard" />;
 };
 
 function App() {

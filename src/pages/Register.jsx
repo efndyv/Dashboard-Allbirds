@@ -1,15 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../route/AuthContext";
+import Swal from "sweetalert2";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    fullname: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const { register } = useContext(AuthContext);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const success = await register(
+          formData.fullname,
+          formData.email,
+          formData.password,
+          formData.confirmPassword
+        );
+
+        if (success) {
+          await Swal.fire({
+            title: "Başarılı!",
+            text: "Qeydiyyat başarıyla tamamlandı. Login səhifəsinə yönləndirilirsiniz.",
+            icon: "success",
+            confirmButtonText: "Tamam",
+            confirmButtonColor: "#9b59b6",
+          });
+          navigate("/login");
+        }
+      } catch (error) {
+        Swal.fire({
+          title: "Hata!",
+          text: error.message || "Kayıt sırasında bir hata oluştu.",
+          icon: "error",
+          confirmButtonText: "Tamam",
+          confirmButtonColor: "#e74c3c",
+        });
+      }
+    } else {
+      Swal.fire({
+        title: "Form Xətası",
+        text: "Zəhmət olmasa  xətaları düzəldin.",
+        icon: "warning",
+        confirmButtonText: "Tamam",
+        confirmButtonColor: "#f39c12",
+      });
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,8 +67,8 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Ad soyad gereklidir";
+    if (!formData.fullname.trim()) {
+      newErrors.fullname = "Ad soyad gereklidir";
     }
 
     if (!formData.email.trim()) {
@@ -33,28 +78,21 @@ const Register = () => {
     }
 
     if (!formData.password) {
-      newErrors.password = "Şifre gereklidir";
+      newErrors.password = "Şifrə gereklidir";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Şifre en az 6 karakter olmalıdır";
+      newErrors.password = "Şifrə en az 6 karakter olmalıdır";
     }
-
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Şifrə gereklidir";
+    } else if (formData.confirmPassword.length < 6) {
+      newErrors.confirmPassword = "Şifrə en az 6 karakter olmalıdır";
+    }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Şifreler eşleşmiyor";
+      newErrors.confirmPassword = "Şifrələr eşleşmiyor";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (validateForm()) {
-      // Burada kayıt işlemini gerçekleştirin
-      // Örneğin API çağrısı yapabilirsiniz
-      console.log("Kayıt başarılı:", formData);
-      navigate("/login"); // Kayıt başarılıysa login sayfasına yönlendir
-    }
   };
 
   return (
@@ -80,7 +118,6 @@ const Register = () => {
           overflow: "hidden",
         }}
       >
- 
         <div
           style={{
             position: "absolute",
@@ -114,7 +151,7 @@ const Register = () => {
             zIndex: 1,
           }}
         >
-          Kayıt Ol
+          Qeydiyyat
         </h1>
 
         <form
@@ -130,14 +167,14 @@ const Register = () => {
           <div style={{ position: "relative" }}>
             <input
               type="text"
-              name="name"
+              name="fullname"
               placeholder="Ad Soyad"
-              value={formData.name}
+              value={formData.fullname}
               onChange={handleChange}
               style={{
                 width: "86%",
                 padding: "1rem",
-                border: `1px solid ${errors.name ? "#e74c3c" : "#e0e0e0"}`,
+                border: `1px solid ${errors.fullname ? "#e74c3c" : "#e0e0e0"}`,
                 borderRadius: "8px",
                 fontSize: "1rem",
                 transition: "all 0.3s",
@@ -149,7 +186,7 @@ const Register = () => {
                 e.target.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = errors.name
+                e.target.style.borderColor = errors.fullname
                   ? "#e74c3c"
                   : "#e0e0e0";
                 e.target.style.boxShadow = "none";
@@ -163,7 +200,7 @@ const Register = () => {
                 transform: "translateY(-50%)",
                 width: "20px",
                 height: "20px",
-                color: errors.name ? "#e74c3c" : "#7f8c8d",
+                color: errors.fullname ? "#e74c3c" : "#7f8c8d",
               }}
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -177,18 +214,6 @@ const Register = () => {
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            {errors.name && (
-              <p
-                style={{
-                  color: "#e74c3c",
-                  fontSize: "0.8rem",
-                  marginTop: "0.5rem",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                {errors.name}
-              </p>
-            )}
           </div>
 
           <div style={{ position: "relative" }}>
@@ -241,25 +266,13 @@ const Register = () => {
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            {errors.email && (
-              <p
-                style={{
-                  color: "#e74c3c",
-                  fontSize: "0.8rem",
-                  marginTop: "0.5rem",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                {errors.email}
-              </p>
-            )}
           </div>
 
           <div style={{ position: "relative" }}>
             <input
               type="password"
               name="password"
-              placeholder="Şifre"
+              placeholder="Şifrə"
               value={formData.password}
               onChange={handleChange}
               style={{
@@ -305,25 +318,13 @@ const Register = () => {
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            {errors.password && (
-              <p
-                style={{
-                  color: "#e74c3c",
-                  fontSize: "0.8rem",
-                  marginTop: "0.5rem",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                {errors.password}
-              </p>
-            )}
           </div>
 
           <div style={{ position: "relative" }}>
             <input
               type="password"
               name="confirmPassword"
-              placeholder="Şifre Tekrar"
+              placeholder="Şifrə Təkrarı"
               value={formData.confirmPassword}
               onChange={handleChange}
               style={{
@@ -371,18 +372,6 @@ const Register = () => {
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            {errors.confirmPassword && (
-              <p
-                style={{
-                  color: "#e74c3c",
-                  fontSize: "0.8rem",
-                  marginTop: "0.5rem",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                {errors.confirmPassword}
-              </p>
-            )}
           </div>
 
           <button
@@ -413,7 +402,7 @@ const Register = () => {
               e.target.style.boxShadow = "0 4px 6px rgba(155, 89, 182, 0.3)";
             }}
           >
-            Kayıt Ol
+            Register
           </button>
         </form>
 
@@ -427,7 +416,7 @@ const Register = () => {
             zIndex: 1,
           }}
         >
-          Zaten hesabınız var mı?{" "}
+          Hesabınız varsa?{" "}
           <a
             href="/login"
             style={{
@@ -438,7 +427,7 @@ const Register = () => {
             onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
             onMouseOut={(e) => (e.target.style.textDecoration = "none")}
           >
-            Giriş Yapın
+            Login
           </a>
         </div>
       </div>
